@@ -2,148 +2,146 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-# Load dataset
-df = pd.read_csv("data/employee_data.csv")
+# Load quote dataset
+df = pd.read_csv("data/quotes_data.csv")
 
 # Create charts folder
 os.makedirs("charts", exist_ok=True)
 
-# 1. Attrition Distribution
-attrition_counts = df["Attrition"].value_counts()
+# Clean data
+df["Quote"] = df["Quote"].fillna("")
+df["Author"] = df["Author"].fillna("Unknown")
+df["Tags"] = df["Tags"].fillna("")
 
-plt.figure(figsize=(7, 5))
-attrition_counts.plot(kind="bar")
-plt.title("Employee Attrition Distribution")
-plt.xlabel("Attrition")
-plt.ylabel("Number of Employees")
+# --------------------------------------------------
+# 1. Top 10 Authors
+# --------------------------------------------------
+
+author_counts = df["Author"].value_counts().head(10)
+
+plt.figure(figsize=(10, 6))
+author_counts.sort_values().plot(kind="barh")
+
+plt.title("Top 10 Authors by Number of Quotes")
+plt.xlabel("Number of Quotes")
+plt.ylabel("Author")
 plt.tight_layout()
-plt.savefig("charts/attrition_distribution.png")
+
+plt.savefig("charts/01_top_10_authors.png")
 plt.close()
 
 
-# 2. Department vs Attrition
-department_attrition = pd.crosstab(
-    df["Department"],
-    df["Attrition"]
+# --------------------------------------------------
+# 2. Top 10 Tags
+# --------------------------------------------------
+
+tags = (
+    df["Tags"]
+    .str.split(",")
+    .explode()
+    .str.strip()
 )
 
-department_attrition.plot(
-    kind="bar",
-    figsize=(8, 5)
-)
+tag_counts = tags.value_counts().head(10)
 
-plt.title("Attrition by Department")
-plt.xlabel("Department")
-plt.ylabel("Number of Employees")
-plt.xticks(rotation=20)
+plt.figure(figsize=(10, 6))
+tag_counts.sort_values().plot(kind="barh")
+
+plt.title("Top 10 Tags")
+plt.xlabel("Number of Quotes")
+plt.ylabel("Tag")
 plt.tight_layout()
-plt.savefig("charts/department_attrition.png")
+
+plt.savefig("charts/02_top_10_tags.png")
 plt.close()
 
 
-# 3. Gender vs Attrition
-gender_attrition = pd.crosstab(
-    df["Gender"],
-    df["Attrition"]
-)
+# --------------------------------------------------
+# 3. Quote Length Distribution
+# --------------------------------------------------
 
-gender_attrition.plot(
-    kind="bar",
-    figsize=(7, 5)
-)
+df["Quote_Length"] = df["Quote"].str.len()
 
-plt.title("Attrition by Gender")
-plt.xlabel("Gender")
-plt.ylabel("Number of Employees")
+plt.figure(figsize=(10, 6))
+plt.hist(df["Quote_Length"], bins=20, edgecolor="black")
+
+plt.title("Quote Length Distribution")
+plt.xlabel("Quote Length (Characters)")
+plt.ylabel("Number of Quotes")
 plt.tight_layout()
-plt.savefig("charts/gender_attrition.png")
+
+plt.savefig("charts/03_quote_length_distribution.png")
 plt.close()
 
 
-# 4. Age Distribution
-plt.figure(figsize=(8, 5))
+# --------------------------------------------------
+# 4. Word Count Distribution
+# --------------------------------------------------
 
-plt.hist(
-    df["Age"],
-    bins=15,
-    edgecolor="black"
-)
+df["Word_Count"] = df["Quote"].str.split().str.len()
 
-plt.title("Employee Age Distribution")
-plt.xlabel("Age")
-plt.ylabel("Number of Employees")
+plt.figure(figsize=(10, 6))
+plt.hist(df["Word_Count"], bins=15, edgecolor="black")
+
+plt.title("Word Count Distribution")
+plt.xlabel("Number of Words")
+plt.ylabel("Number of Quotes")
 plt.tight_layout()
-plt.savefig("charts/age_distribution.png")
+
+plt.savefig("charts/04_word_count_distribution.png")
 plt.close()
 
 
-# 5. Monthly Income Distribution
-plt.figure(figsize=(8, 5))
+# --------------------------------------------------
+# 5. Tags Per Quote
+# --------------------------------------------------
 
-plt.hist(
-    df["MonthlyIncome"],
-    bins=20,
-    edgecolor="black"
+df["Tags_Per_Quote"] = (
+    df["Tags"]
+    .apply(lambda x: len([tag for tag in x.split(",") if tag.strip()]))
 )
 
-plt.title("Monthly Income Distribution")
-plt.xlabel("Monthly Income")
-plt.ylabel("Number of Employees")
+plt.figure(figsize=(10, 6))
+df["Tags_Per_Quote"].value_counts().sort_index().plot(kind="bar")
+
+plt.title("Number of Tags per Quote")
+plt.xlabel("Number of Tags")
+plt.ylabel("Number of Quotes")
 plt.tight_layout()
-plt.savefig("charts/income_distribution.png")
+
+plt.savefig("charts/05_tags_per_quote.png")
 plt.close()
 
 
-# 6. Job Satisfaction Distribution
-job_satisfaction = df["JobSatisfaction"].value_counts().sort_index()
+# --------------------------------------------------
+# 6. Average Quote Length by Author
+# --------------------------------------------------
 
-plt.figure(figsize=(7, 5))
-job_satisfaction.plot(kind="bar")
+avg_quote_length = (
+    df.groupby("Author")["Quote_Length"]
+    .mean()
+    .sort_values(ascending=False)
+    .head(10)
+)
 
-plt.title("Job Satisfaction Distribution")
-plt.xlabel("Job Satisfaction Level")
-plt.ylabel("Number of Employees")
+plt.figure(figsize=(10, 6))
+avg_quote_length.sort_values().plot(kind="barh")
+
+plt.title("Average Quote Length by Author")
+plt.xlabel("Average Quote Length (Characters)")
+plt.ylabel("Author")
 plt.tight_layout()
-plt.savefig("charts/job_satisfaction.png")
+
+plt.savefig("charts/06_average_quote_length_by_author.png")
 plt.close()
 
 
-# 7. Overtime vs Attrition
-overtime_attrition = pd.crosstab(
-    df["OverTime"],
-    df["Attrition"]
-)
-
-overtime_attrition.plot(
-    kind="bar",
-    figsize=(7, 5)
-)
-
-plt.title("Overtime vs Attrition")
-plt.xlabel("Overtime")
-plt.ylabel("Number of Employees")
-plt.tight_layout()
-plt.savefig("charts/overtime_attrition.png")
-plt.close()
-
-
-# 8. Job Level vs Attrition
-joblevel_attrition = pd.crosstab(
-    df["JobLevel"],
-    df["Attrition"]
-)
-
-joblevel_attrition.plot(
-    kind="bar",
-    figsize=(7, 5)
-)
-
-plt.title("Job Level vs Attrition")
-plt.xlabel("Job Level")
-plt.ylabel("Number of Employees")
-plt.tight_layout()
-plt.savefig("charts/joblevel_attrition.png")
-plt.close()
-
-
-print("All visualizations generated successfully!")
+print("TASK 3 COMPLETED SUCCESSFULLY!")
+print("6 visualizations created:")
+print("1. Top 10 Authors")
+print("2. Top 10 Tags")
+print("3. Quote Length Distribution")
+print("4. Word Count Distribution")
+print("5. Tags per Quote")
+print("6. Average Quote Length by Author")
+print("Charts saved inside the 'charts' folder.")
