@@ -112,7 +112,7 @@ Task_3_DataVisualization/
 │   └── 06_average_quote_length_by_author.png
 │
 ├── data/
-│   └── employee_data.csv
+│   └── quotes_data.csv
 │
 ├── visualization.py
 └── README.md
